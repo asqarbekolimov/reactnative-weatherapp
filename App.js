@@ -1,20 +1,44 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import Loader from "./components/loader";
+import { useEffect, useState } from "react";
+import Weather from "./components/weather";
+import * as Location from "expo-location";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  const [isLoading, setIsLoading] = useState(true);
+  const [location, setLocation] = useState({
+    latitude: null,
+    longitude: null,
+  });
+  const [errorMsg, setErrorMsg] = useState(null);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  const getLoaction = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission to access location was denied");
+        return;
+      }
+
+      const {
+        coords: { altitude, longitude },
+      } = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: altitude,
+        longitude: longitude,
+      });
+    } catch (error) {
+      Alert.alert("I can`t find your location, so bad");
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+      getLoaction();
+    }, 2000);
+  }, []);
+
+  return isLoading ? <Loader /> : <Weather />;
+}
